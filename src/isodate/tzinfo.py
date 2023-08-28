@@ -105,13 +105,13 @@ class FixedOffset(tzinfo):
         return "<FixedOffset %r>" % self.__name
 
 
-STDOFFSET: Final = timedelta(seconds=-time.timezone)
+STDOFFSET = timedelta(seconds=-time.timezone)
 # locale time zone offset
 
 # calculate local daylight saving offset if any.
-DSTOFFSET: Final = timedelta(seconds=-time.altzone) if time.daylight else STDOFFSET
+DSTOFFSET = timedelta(seconds=-time.altzone) if time.daylight else STDOFFSET
 
-DSTDIFF: Final = DSTOFFSET - STDOFFSET
+DSTDIFF = DSTOFFSET - STDOFFSET
 # difference between local time zone and local DST time zone
 
 
