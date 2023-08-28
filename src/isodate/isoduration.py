@@ -43,6 +43,12 @@ def parse_duration(datestring: str,
                    ) -> Duration: ...
 
 
+@overload
+def parse_duration(datestring: str,
+                   as_timedelta_if_possible: bool = True
+                   ) -> DurationOrTimedelta: ...
+
+
 def parse_duration(datestring: str,
                    as_timedelta_if_possible: bool = True
                    ) -> DurationOrTimedelta:

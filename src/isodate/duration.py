@@ -177,7 +177,7 @@ class Duration:
             # try anything that looks like a date or datetime
             # 'other' has attributes year, month, day
             # and relies on 'timedelta + other' being implemented
-            other_date: date = cast(date, other)
+            other_date = cast(date, other)  # silence mypy, runtime uses try-except
             if not (float(self.years).is_integer() and float(self.months).is_integer()):
                 raise ValueError(
                     "fractional years or months not supported" " for date calculations"
@@ -201,7 +201,7 @@ class Duration:
         try:
             # try if other is a timedelta
             # relies on timedelta + timedelta supported
-            other_timedelta: timedelta = cast(timedelta, other)
+            other_timedelta = cast(timedelta, other)  # silence mypy, runtime uses try
             newduration = Duration(years=self.years, months=self.months)
             newduration.tdelta = self.tdelta + other_timedelta
             return newduration
