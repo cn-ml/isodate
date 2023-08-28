@@ -106,10 +106,7 @@ def create_testcase(dt: datetime, format: str, expectation: str) -> TestSuite:
             Take date object and create ISO string from it.
             This is the reverse test to test_parse.
             """
-            if expectation is None:
-                self.assertRaises(AttributeError, strftime(dt, format))
-            else:
-                self.assertEqual(strftime(dt, format), expectation)
+            self.assertEqual(strftime(dt, format), expectation)
 
     return unittest.TestLoader().loadTestsFromTestCase(TestDate)
 
