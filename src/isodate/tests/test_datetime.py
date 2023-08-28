@@ -1,8 +1,12 @@
 """
 Test cases for the isodatetime module.
 """
+from __future__ import annotations
+
 import unittest
 from datetime import datetime
+from typing import Final, Sequence
+from unittest import TestSuite, TestLoader
 
 from isodate import parse_datetime, UTC, FixedOffset, datetime_isoformat
 from isodate import ISO8601Error
@@ -12,10 +16,11 @@ from isodate import TZ_BAS, TZ_EXT, TZ_HOUR
 from isodate import DATE_BAS_ORD_COMPLETE, DATE_EXT_ORD_COMPLETE
 from isodate import DATE_BAS_WEEK_COMPLETE, DATE_EXT_WEEK_COMPLETE
 
+
 # the following list contains tuples of ISO datetime strings and the expected
 # result from the parse_datetime method. A result of None means an ISO8601Error
 # is expected.
-TEST_CASES = [
+TEST_CASES: Final[Sequence[tuple[str, datetime | None, str, str]]] = [
     (
         "19850412T1015",
         datetime(1985, 4, 12, 10, 15),
@@ -124,7 +129,11 @@ TEST_CASES = [
 ]
 
 
-def create_testcase(datetimestring, expectation, format, output):
+def create_testcase(datetimestring: str,
+                    expectation: datetime | None,
+                    format: str,
+                    output: str,
+                    ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -138,7 +147,7 @@ def create_testcase(datetimestring, expectation, format, output):
         datetime object.
         """
 
-        def test_parse(self):
+        def test_parse(self) -> None:
             """
             Parse an ISO datetime string and compare it to the expected value.
             """
@@ -147,7 +156,7 @@ def create_testcase(datetimestring, expectation, format, output):
             else:
                 self.assertEqual(parse_datetime(datetimestring), expectation)
 
-        def test_format(self):
+        def test_format(self) -> None:
             """
             Take datetime object and create ISO string from it.
             This is the reverse test to test_parse.
@@ -162,7 +171,7 @@ def create_testcase(datetimestring, expectation, format, output):
     return unittest.TestLoader().loadTestsFromTestCase(TestDateTime)
 
 
-def test_suite():
+def test_suite() -> TestSuite:
     """
     Construct a TestSuite instance for all test cases.
     """
@@ -173,7 +182,10 @@ def test_suite():
 
 
 # load_tests Protocol
-def load_tests(loader, tests, pattern):
+def load_tests(loader: TestLoader,
+               tests: TestSuite,
+               pattern: str | None
+               ) -> unittest.TestSuite:
     return test_suite()
 
 

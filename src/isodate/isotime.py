@@ -9,10 +9,9 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal, ROUND_FLOOR
-from datetime import date, time, timedelta
-from typing import TYPE_CHECKING
+from datetime import date, time
 
-from isodate.duration import Duration
+from isodate.duration import DurationOrTimedelta
 from isodate.isostrf import strftime, TIME_EXT_COMPLETE, TZ_EXT
 from isodate.isoerror import ISO8601Error
 from isodate.isotzinfo import TZ_REGEX, build_tzinfo
@@ -91,6 +90,9 @@ def parse_time(timestring: str) -> time:
       +-hh:mm extended hours and minutes
       +-hh    hours
     """
+    microsecond: int | Decimal
+    second: int | Decimal
+    minute: int | Decimal
     isotimes = build_time_regexps()
     for pattern in isotimes:
         match = pattern.match(timestring)
@@ -148,7 +150,9 @@ def parse_time(timestring: str) -> time:
     raise ISO8601Error("Unrecognised ISO 8601 time format: %r" % timestring)
 
 
-def time_isoformat(ttime: timedelta | Duration | time | date, format: str=TIME_EXT_COMPLETE + TZ_EXT) -> str:
+def time_isoformat(ttime: DurationOrTimedelta | time | date,
+                   format: str = TIME_EXT_COMPLETE + TZ_EXT,
+                   ) -> str:
     """
     Format time strings.
 

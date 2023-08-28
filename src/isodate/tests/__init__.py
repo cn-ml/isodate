@@ -1,9 +1,12 @@
 """
 Collect all test suites into one TestSuite instance.
 """
+from __future__ import annotations
 
 import unittest
 import warnings
+from unittest import TestSuite
+
 from isodate.tests import (
     test_date,
     test_time,
@@ -14,7 +17,7 @@ from isodate.tests import (
 )
 
 
-def test_suite():
+def test_suite() -> TestSuite:
     """
     Return a new TestSuite instance consisting of all available TestSuites.
     """

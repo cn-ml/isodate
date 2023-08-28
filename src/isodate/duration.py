@@ -6,11 +6,21 @@ used as limited replacement for timedelta objects.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal, ROUND_FLOOR
+from typing import Any, cast, overload, TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 
-def fquotmod(val: Decimal, low: int, high: int):
+# The _DateT TypeVar represents datetime.date or its subclass datetime.datetime
+_DateT = TypeVar("_DateT", bound=date)
+
+DurationOrTimedelta: TypeAlias = "Duration | timedelta"
+
+
+def fquotmod(val: Decimal, low: int, high: int) -> tuple[int, Decimal]:
     """
     A divmod function with boundaries.
 
@@ -27,7 +37,7 @@ def fquotmod(val: Decimal, low: int, high: int):
     return int(div), mod
 
 
-def max_days_in_month(year, month):
+def max_days_in_month(year: Decimal, month: Decimal) -> int:
     """
     Determines the number of days of a specific month in a specific year.
     """
@@ -65,15 +75,15 @@ class Duration:
 
     def __init__(
         self,
-        days: float=0,
-        seconds: float=0,
-        microseconds: float=0,
-        milliseconds: float=0,
-        minutes: float=0,
-        hours: float=0,
-        weeks: float=0,
-        months: float | Decimal=0,
-        years: float | Decimal=0,
+        days: float = 0,
+        seconds: float = 0,
+        microseconds: float = 0,
+        milliseconds: float = 0,
+        minutes: float = 0,
+        hours: float = 0,
+        weeks: float = 0,
+        months: float | Decimal = 0,
+        years: float | Decimal = 0,
     ):
         """
         Initialise this Duration instance with the given parameters.
@@ -88,23 +98,23 @@ class Duration:
             days, seconds, microseconds, milliseconds, minutes, hours, weeks
         )
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict[str, Any]:
         return self.__dict__
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict[str, Any]) -> None:
         self.__dict__.update(state)
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         """
         Provide direct access to attributes of included timedelta instance.
         """
         return getattr(self.tdelta, name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return a string representation of this duration similar to timedelta.
         """
-        params = list[str]()
+        params: list[str] = []
         if self.years:
             params.append("%d years" % self.years)
         if self.months:
@@ -115,7 +125,7 @@ class Duration:
         params.append(str(self.tdelta))
         return ", ".join(params)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a string suitable for repr(x) calls.
         """
@@ -129,14 +139,14 @@ class Duration:
             self.months,
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Return a hash of this instance so that it can be used in, for
         example, dicts and sets.
         """
         return hash((self.tdelta, self.months, self.years))
 
-    def __neg__(self):
+    def __neg__(self) -> Duration:
         """
         A simple unary minus.
 
@@ -146,8 +156,14 @@ class Duration:
         negduration.tdelta = -self.tdelta
         return negduration
 
-    def __add__(self, other: Duration | timedelta | date | datetime) -> Duration | date | datetime:
-        """
+    @overload
+    def __add__(self, other: DurationOrTimedelta) -> Duration: ...
+
+    @overload
+    def __add__(self, other: _DateT) -> _DateT: ...
+
+    def __add__(self, other: date | DurationOrTimedelta) -> date | Duration:
+        """timedelta
         Durations can be added with Duration, timedelta, date and datetime
         objects.
         """
@@ -161,19 +177,20 @@ class Duration:
             # try anything that looks like a date or datetime
             # 'other' has attributes year, month, day
             # and relies on 'timedelta + other' being implemented
+            other_date = cast(date, other)  # silence mypy, runtime uses try-except
             if not (float(self.years).is_integer() and float(self.months).is_integer()):
                 raise ValueError(
                     "fractional years or months not supported" " for date calculations"
                 )
-            newmonth = other.month + self.months
+            newmonth = other_date.month + self.months
             carry, newmonth = fquotmod(newmonth, 1, 13)
-            newyear = other.year + self.years + carry
+            newyear = other_date.year + self.years + carry
             maxdays = max_days_in_month(newyear, newmonth)
-            if other.day > maxdays:
+            if other_date.day > maxdays:
                 newday = maxdays
             else:
-                newday = other.day
-            newdt = other.replace(
+                newday = other_date.day
+            newdt = other_date.replace(
                 year=int(newyear), month=int(newmonth), day=int(newday)
             )
             # does a timedelta + date/datetime
@@ -184,8 +201,9 @@ class Duration:
         try:
             # try if other is a timedelta
             # relies on timedelta + timedelta supported
+            other_timedelta = cast(timedelta, other)  # silence mypy, runtime uses try
             newduration = Duration(years=self.years, months=self.months)
-            newduration.tdelta = self.tdelta + other
+            newduration.tdelta = self.tdelta + other_timedelta
             return newduration
         except AttributeError:
             # ignore ... other probably was not a timedelta compatible object
@@ -204,7 +222,8 @@ class Duration:
 
     __rmul__ = __mul__
 
-    def __sub__(self, other: Duration | timedelta) -> Duration:
+    def __sub__(self, other: DurationOrTimedelta) -> Duration:
+
         """
         It is possible to subtract Duration and timedelta objects from Duration
         objects.
@@ -225,7 +244,13 @@ class Duration:
             pass
         return NotImplemented
 
-    def __rsub__(self, other: Duration | date | datetime | timedelta):
+    @overload
+    def __rsub__(self, other: _DateT) -> _DateT: ...
+
+    @overload
+    def __rsub__(self, other: timedelta) -> Duration: ...
+
+    def __rsub__(self, other: date | timedelta) -> date | Duration:
         """
         It is possible to subtract Duration objects from date, datetime and
         timedelta objects.
@@ -267,7 +292,7 @@ class Duration:
             pass
         return NotImplemented
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         """
         If the years, month part and the timedelta part are both equal, then
         the two Durations are considered equal.
@@ -284,7 +309,7 @@ class Duration:
             return self.tdelta == other
         return False
 
-    def __ne__(self, other: object):
+    def __ne__(self, other: object) -> bool:
         """
         If the years, month part or the timedelta part is not equal, then
         the two Durations are considered not equal.
@@ -301,7 +326,16 @@ class Duration:
             return self.tdelta != other
         return True
 
-    def totimedelta(self, start: date | datetime | None=None, end: date | datetime | None=None) -> timedelta:
+    @overload
+    def totimedelta(self, start: date, end: None = None) -> timedelta: ...
+
+    @overload
+    def totimedelta(self, start: None, end: date) -> timedelta: ...
+
+    def totimedelta(self,
+                    start: date | None = None,
+                    end: date | None = None,
+                    ) -> timedelta:
         """
         Convert this duration into a timedelta object.
 
@@ -314,4 +348,5 @@ class Duration:
             raise ValueError("only start or end allowed")
         if start is not None:
             return (start + self) - start
+        assert end is not None
         return end - (end - self)

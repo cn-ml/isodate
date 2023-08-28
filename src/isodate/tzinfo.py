@@ -6,13 +6,11 @@ All those classes are taken from the Python documentation.
 from __future__ import annotations
 
 import time
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, Final, Literal
 from datetime import datetime, timedelta, tzinfo
 
-if TYPE_CHECKING:
-    from typing_extensions import Literal
 
-ZERO = timedelta(0)
+ZERO: Final = timedelta(0)
 # constant for zero time offset.
 
 
@@ -42,14 +40,14 @@ class Utc(tzinfo):
         """
         return ZERO
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[Callable[[], Utc], tuple[()]]:
         """
         When unpickling a Utc object, return the default instance below, UTC.
         """
         return _Utc, ()
 
 
-UTC = Utc()
+UTC: Final = Utc()
 # the default instance for UTC.
 
 
@@ -68,7 +66,10 @@ class FixedOffset(tzinfo):
     build a UTC tzinfo object.
     """
 
-    def __init__(self, offset_hours: float=0, offset_minutes: float=0, name: str="UTC") -> None:
+    def __init__(self, offset_hours: float = 0,
+                 offset_minutes: float = 0,
+                 name: str = "UTC",
+                 ) -> None:
         """
         Initialise an instance with time offset and name.
         The time offset should be positive for time zones east of UTC
@@ -167,4 +168,4 @@ class LocalTimezone(tzinfo):
 
 
 # the default instance for local time zone.
-LOCAL = LocalTimezone()
+LOCAL: Final = LocalTimezone()

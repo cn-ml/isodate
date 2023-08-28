@@ -11,54 +11,55 @@ from __future__ import annotations
 
 import re
 from datetime import date, time, timedelta
-from typing import Callable
+from typing import Callable, Final, Mapping
 
-from isodate.duration import Duration
+from isodate.duration import Duration, DurationOrTimedelta
 from isodate.isotzinfo import tz_isoformat
 
+
 # Date specific format strings
-DATE_BAS_COMPLETE = "%Y%m%d"
-DATE_EXT_COMPLETE = "%Y-%m-%d"
-DATE_BAS_WEEK_COMPLETE = "%YW%W%w"
-DATE_EXT_WEEK_COMPLETE = "%Y-W%W-%w"
-DATE_BAS_ORD_COMPLETE = "%Y%j"
-DATE_EXT_ORD_COMPLETE = "%Y-%j"
-DATE_BAS_WEEK = "%YW%W"
-DATE_EXT_WEEK = "%Y-W%W"
-DATE_BAS_MONTH = "%Y%m"
-DATE_EXT_MONTH = "%Y-%m"
-DATE_YEAR = "%Y"
-DATE_CENTURY = "%C"
+DATE_BAS_COMPLETE: Final = "%Y%m%d"
+DATE_EXT_COMPLETE: Final = "%Y-%m-%d"
+DATE_BAS_WEEK_COMPLETE: Final = "%YW%W%w"
+DATE_EXT_WEEK_COMPLETE: Final = "%Y-W%W-%w"
+DATE_BAS_ORD_COMPLETE: Final = "%Y%j"
+DATE_EXT_ORD_COMPLETE: Final = "%Y-%j"
+DATE_BAS_WEEK: Final = "%YW%W"
+DATE_EXT_WEEK: Final = "%Y-W%W"
+DATE_BAS_MONTH: Final = "%Y%m"
+DATE_EXT_MONTH: Final = "%Y-%m"
+DATE_YEAR: Final = "%Y"
+DATE_CENTURY: Final = "%C"
 
 # Time specific format strings
-TIME_BAS_COMPLETE = "%H%M%S"
-TIME_EXT_COMPLETE = "%H:%M:%S"
-TIME_BAS_MINUTE = "%H%M"
-TIME_EXT_MINUTE = "%H:%M"
-TIME_HOUR = "%H"
+TIME_BAS_COMPLETE: Final = "%H%M%S"
+TIME_EXT_COMPLETE: Final = "%H:%M:%S"
+TIME_BAS_MINUTE: Final = "%H%M"
+TIME_EXT_MINUTE: Final = "%H:%M"
+TIME_HOUR: Final = "%H"
 
 # Time zone formats
-TZ_BAS = "%z"
-TZ_EXT = "%Z"
-TZ_HOUR = "%h"
+TZ_BAS: Final = "%z"
+TZ_EXT: Final = "%Z"
+TZ_HOUR: Final = "%h"
 
 # DateTime formats
-DT_EXT_COMPLETE = DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
-DT_BAS_COMPLETE = DATE_BAS_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
-DT_EXT_ORD_COMPLETE = DATE_EXT_ORD_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
-DT_BAS_ORD_COMPLETE = DATE_BAS_ORD_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
-DT_EXT_WEEK_COMPLETE = DATE_EXT_WEEK_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
-DT_BAS_WEEK_COMPLETE = DATE_BAS_WEEK_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
+DT_EXT_COMPLETE: Final = DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
+DT_BAS_COMPLETE: Final = DATE_BAS_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
+DT_EXT_ORD_COMPLETE: Final = DATE_EXT_ORD_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
+DT_BAS_ORD_COMPLETE: Final = DATE_BAS_ORD_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
+DT_EXT_WEEK_COMPLETE: Final = DATE_EXT_WEEK_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
+DT_BAS_WEEK_COMPLETE: Final = DATE_BAS_WEEK_COMPLETE + "T" + TIME_BAS_COMPLETE + TZ_BAS
 
 # Duration formts
-D_DEFAULT = "P%P"
-D_WEEK = "P%p"
-D_ALT_EXT = "P" + DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE
-D_ALT_BAS = "P" + DATE_BAS_COMPLETE + "T" + TIME_BAS_COMPLETE
-D_ALT_EXT_ORD = "P" + DATE_EXT_ORD_COMPLETE + "T" + TIME_EXT_COMPLETE
-D_ALT_BAS_ORD = "P" + DATE_BAS_ORD_COMPLETE + "T" + TIME_BAS_COMPLETE
+D_DEFAULT: Final = "P%P"
+D_WEEK: Final = "P%p"
+D_ALT_EXT: Final = "P" + DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE
+D_ALT_BAS: Final = "P" + DATE_BAS_COMPLETE + "T" + TIME_BAS_COMPLETE
+D_ALT_EXT_ORD: Final = "P" + DATE_EXT_ORD_COMPLETE + "T" + TIME_EXT_COMPLETE
+D_ALT_BAS_ORD: Final = "P" + DATE_BAS_ORD_COMPLETE + "T" + TIME_BAS_COMPLETE
 
-STRF_DT_MAP: dict[str, Callable[[time | date, int], str]] = {
+STRF_DT_MAP: Final[Mapping[str, Callable[..., str]]] = {
     "%d": lambda tdt, yds: "%02d" % tdt.day,
     "%f": lambda tdt, yds: "%06d" % tdt.microsecond,
     "%H": lambda tdt, yds: "%02d" % tdt.hour,
@@ -78,7 +79,7 @@ STRF_DT_MAP: dict[str, Callable[[time | date, int], str]] = {
     "%%": lambda tdt, yds: "%",
 }
 
-STRF_D_MAP: dict[str, Callable[[timedelta | Duration, int], str]] = {
+STRF_D_MAP: Final[Mapping[str, Callable[..., str]]] = {
     "%d": lambda tdt, yds: "%02d" % tdt.days,
     "%f": lambda tdt, yds: "%06d" % tdt.microseconds,
     "%H": lambda tdt, yds: "%02d" % (tdt.seconds / 60 / 60),
@@ -94,7 +95,10 @@ STRF_D_MAP: dict[str, Callable[[timedelta | Duration, int], str]] = {
 }
 
 
-def _strfduration(tdt: timedelta | Duration, format: str, yeardigits: int=4) -> str:
+def _strfduration(tdt: DurationOrTimedelta,
+                  format: str,
+                  yeardigits: int = 4,
+                  ) -> str:
     """
     this is the work method for timedelta and Duration instances.
 
@@ -144,7 +148,10 @@ def _strfduration(tdt: timedelta | Duration, format: str, yeardigits: int=4) -> 
     return re.sub("%d|%f|%H|%m|%M|%S|%W|%Y|%C|%%|%P|%p", repl, format)
 
 
-def _strfdt(tdt: time | date, format: str, yeardigits: int=4) -> str:
+def _strfdt(tdt: time | date,
+            format: str,
+            yeardigits: int = 4,
+            ) -> str:
     """
     this is the work method for time and date instances.
 
@@ -162,7 +169,10 @@ def _strfdt(tdt: time | date, format: str, yeardigits: int=4) -> str:
     return re.sub("%d|%f|%H|%j|%m|%M|%S|%w|%W|%Y|%C|%z|%Z|%h|%%", repl, format)
 
 
-def strftime(tdt: timedelta | Duration | time | date, format: str, yeardigits: int=4) -> str:
+def strftime(tdt: DurationOrTimedelta | time | date,
+             format: str,
+             yeardigits: int = 4,
+             ) -> str:
     """Directive    Meaning    Notes
     %d    Day of the month as a decimal number [01,31].
     %f    Microsecond as a decimal number [0,999999], zero-padded

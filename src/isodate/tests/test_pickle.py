@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import unittest
 
 import pickle
+from unittest import TestLoader, TestSuite
 
 import isodate
 
@@ -11,7 +14,7 @@ class TestPickle(unittest.TestCase):
     datetime object.
     """
 
-    def test_pickle_datetime(self):
+    def test_pickle_datetime(self) -> None:
         """
         Parse an ISO datetime string and compare it to the expected value.
         """
@@ -20,7 +23,7 @@ class TestPickle(unittest.TestCase):
             pikl = pickle.dumps(dti, proto)
             self.assertEqual(dti, pickle.loads(pikl), "pickle proto %d failed" % proto)
 
-    def test_pickle_duration(self):
+    def test_pickle_duration(self) -> None:
         """
         Pickle / unpickle duration objects.
         """
@@ -37,14 +40,14 @@ class TestPickle(unittest.TestCase):
                 failed.append("pickle proto %d failed (%s)" % (proto, repr(e)))
         self.assertEqual(len(failed), 0, "pickle protos failed: %s" % str(failed))
 
-    def test_pickle_utc(self):
+    def test_pickle_utc(self) -> None:
         """
         isodate.UTC objects remain the same after pickling.
         """
         self.assertTrue(isodate.UTC is pickle.loads(pickle.dumps(isodate.UTC)))
 
 
-def test_suite():
+def test_suite() -> TestSuite:
     """
     Construct a TestSuite instance for all test cases.
     """
@@ -54,7 +57,10 @@ def test_suite():
 
 
 # load_tests Protocol
-def load_tests(loader, tests, pattern):
+def load_tests(loader: TestLoader,
+               tests: TestSuite,
+               pattern: str | None,
+               ) -> unittest.TestSuite:
     return test_suite()
 
 

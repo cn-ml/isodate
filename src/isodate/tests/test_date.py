@@ -1,8 +1,13 @@
 """
 Test cases for the isodate module.
 """
+from __future__ import annotations
+
 import unittest
 from datetime import date
+from typing import Final, Mapping, Sequence
+from unittest import TestSuite, TestLoader
+
 from isodate import parse_date, ISO8601Error, date_isoformat
 from isodate import DATE_CENTURY, DATE_YEAR
 from isodate import DATE_BAS_MONTH, DATE_EXT_MONTH
@@ -11,11 +16,12 @@ from isodate import DATE_BAS_ORD_COMPLETE, DATE_EXT_ORD_COMPLETE
 from isodate import DATE_BAS_WEEK, DATE_BAS_WEEK_COMPLETE
 from isodate import DATE_EXT_WEEK, DATE_EXT_WEEK_COMPLETE
 
+
 # the following list contains tuples of ISO date strings and the expected
 # result from the parse_date method. A result of None means an ISO8601Error
 # is expected. The test cases are grouped into dates with 4 digit years
 # and 6 digit years.
-TEST_CASES = {
+TEST_CASES: Final[Mapping[int, Sequence[tuple[str, date | None, str]]]] = {
     4: [
         ("19", date(1901, 1, 1), DATE_CENTURY),
         ("1985", date(1985, 1, 1), DATE_YEAR),
@@ -49,7 +55,11 @@ TEST_CASES = {
 }
 
 
-def create_testcase(yeardigits, datestring, expectation, format):
+def create_testcase(yeardigits: int,
+                    datestring: str,
+                    expectation: date | None,
+                    format: str,
+                    ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -63,7 +73,7 @@ def create_testcase(yeardigits, datestring, expectation, format):
         object.
         """
 
-        def test_parse(self):
+        def test_parse(self) -> None:
             """
             Parse an ISO date string and compare it to the expected value.
             """
@@ -73,7 +83,7 @@ def create_testcase(yeardigits, datestring, expectation, format):
                 result = parse_date(datestring, yeardigits)
                 self.assertEqual(result, expectation)
 
-        def test_format(self):
+        def test_format(self) -> None:
             """
             Take date object and create ISO string from it.
             This is the reverse test to test_parse.
@@ -90,7 +100,7 @@ def create_testcase(yeardigits, datestring, expectation, format):
     return unittest.TestLoader().loadTestsFromTestCase(TestDate)
 
 
-def test_suite():
+def test_suite() -> unittest.TestSuite:
     """
     Construct a TestSuite instance for all test cases.
     """
@@ -102,7 +112,10 @@ def test_suite():
 
 
 # load_tests Protocol
-def load_tests(loader, tests, pattern):
+def load_tests(loader: TestLoader,
+               tests: TestSuite,
+               pattern: str | None
+               ) -> unittest.TestSuite:
     return test_suite()
 
 
