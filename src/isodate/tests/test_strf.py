@@ -1,16 +1,21 @@
 """
 Test cases for the isodate module.
 """
+from __future__ import annotations
+
 import unittest
 import time
 from datetime import datetime, timedelta
+from typing import Any, Final, Mapping, Sequence
+from unittest import TestSuite, TestLoader
+
 from isodate import strftime
 from isodate import LOCAL
 from isodate import DT_EXT_COMPLETE
 from isodate import tzinfo
 
 
-TEST_CASES = (
+TEST_CASES: Final[Sequence[tuple[datetime, str, str]]] = (
     (
         datetime(2012, 12, 25, 13, 30, 0, 0, LOCAL),
         DT_EXT_COMPLETE,
@@ -36,7 +41,7 @@ TEST_CASES = (
 )
 
 
-def create_testcase(dt, format, expectation):
+def create_testcase(dt: datetime, format: str, expectation: str) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -50,7 +55,7 @@ def create_testcase(dt, format, expectation):
         """
 
         # local time zone mock function
-        def localtime_mock(self, secs):
+        def localtime_mock(self, secs: float | None = None) -> time.struct_time:
             """
             mock time.localtime so that it always returns a time_struct with
             tm_idst=1
@@ -74,12 +79,13 @@ def create_testcase(dt, format, expectation):
             )
             return time.struct_time(tt)
 
-        def setUp(self):
-            self.ORIG = {}
-            self.ORIG["STDOFFSET"] = tzinfo.STDOFFSET
-            self.ORIG["DSTOFFSET"] = tzinfo.DSTOFFSET
-            self.ORIG["DSTDIFF"] = tzinfo.DSTDIFF
-            self.ORIG["localtime"] = time.localtime
+        def setUp(self) -> None:
+            self.ORIG: Mapping[str, Any] = {
+                "STDOFFSET": tzinfo.STDOFFSET,
+                "DSTOFFSET": tzinfo.DSTOFFSET,
+                "DSTDIFF": tzinfo.DSTDIFF,
+                "localtime": time.localtime,
+            }
             # override all saved values with fixtures.
             # calculate LOCAL TZ offset, so that this test runs in
             # every time zone
@@ -88,14 +94,14 @@ def create_testcase(dt, format, expectation):
             tzinfo.DSTDIFF = tzinfo.DSTOFFSET - tzinfo.STDOFFSET
             time.localtime = self.localtime_mock
 
-        def tearDown(self):
+        def tearDown(self) -> None:
             # restore test fixtures
             tzinfo.STDOFFSET = self.ORIG["STDOFFSET"]
             tzinfo.DSTOFFSET = self.ORIG["DSTOFFSET"]
             tzinfo.DSTDIFF = self.ORIG["DSTDIFF"]
             time.localtime = self.ORIG["localtime"]
 
-        def test_format(self):
+        def test_format(self) -> None:
             """
             Take date object and create ISO string from it.
             This is the reverse test to test_parse.
@@ -108,7 +114,7 @@ def create_testcase(dt, format, expectation):
     return unittest.TestLoader().loadTestsFromTestCase(TestDate)
 
 
-def test_suite():
+def test_suite() -> TestSuite:
     """
     Construct a TestSuite instance for all test cases.
     """
@@ -119,7 +125,10 @@ def test_suite():
 
 
 # load_tests Protocol
-def load_tests(loader, tests, pattern):
+def load_tests(loader: TestLoader,
+               tests: TestSuite,
+               pattern: str | None,
+               ) -> unittest.TestSuite:
     return test_suite()
 
 

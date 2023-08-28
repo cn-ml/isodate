@@ -1,17 +1,23 @@
 """
 Test cases for the isoduration module.
 """
+from __future__ import annotations
+
 import unittest
 import operator
 from datetime import timedelta, date, datetime
+from typing import Any, Final, Mapping, Sequence
+from unittest import TestLoader, TestSuite
 
 from isodate import Duration, parse_duration, ISO8601Error
 from isodate import D_DEFAULT, D_WEEK, D_ALT_EXT, duration_isoformat
+from isodate.duration import DurationOrTimedelta
+
 
 # the following list contains tuples of ISO duration strings and the expected
 # result from the parse_duration method. A result of None means an ISO8601Error
 # is expected.
-PARSE_TEST_CASES = {
+PARSE_TEST_CASES: Final[Mapping[str, tuple[DurationOrTimedelta, str, str | None]]] = {
     "P18Y9M4DT11H9M8S": (Duration(4, 8, 0, 0, 9, 11, 0, 9, 18), D_DEFAULT, None),
     "P2W": (timedelta(weeks=2), D_WEEK, None),
     "P3Y6M4DT12H30M5S": (Duration(4, 5, 0, 0, 30, 12, 0, 6, 3), D_DEFAULT, None),
@@ -52,7 +58,7 @@ PARSE_TEST_CASES = {
 # each tuple contains 2 duration strings, and a result string for addition and
 # one for subtraction. The last value says, if the first duration is greater
 # than the second.
-MATH_TEST_CASES = (
+MATH_TEST_CASES: Final[Sequence[tuple[str, str, str, str, bool | None]]] = (
     (
         "P5Y7M1DT9H45M16.72S",
         "PT27M24.68S",
@@ -89,7 +95,7 @@ MATH_TEST_CASES = (
 # A list of test cases to test addition and subtraction of date/datetime
 # and Duration objects. They are tested against the results of an
 # equal long timedelta duration.
-DATE_TEST_CASES = (
+DATE_TEST_CASES: Final[Sequence[tuple[date, DurationOrTimedelta, Duration]]] = (
     (
         date(2008, 2, 29),
         timedelta(days=10, hours=12, minutes=20),
@@ -135,7 +141,7 @@ DATE_TEST_CASES = (
 
 # A list of test cases of addition of date/datetime and Duration. The results
 # are compared against a given expected result.
-DATE_CALC_TEST_CASES = (
+DATE_CALC_TEST_CASES: Final[Sequence[tuple[Any, Any, Any]]] = (
     (date(2000, 2, 1), Duration(years=1, months=1), date(2001, 3, 1)),
     (date(2000, 2, 29), Duration(years=1, months=1), date(2001, 3, 29)),
     (date(2000, 2, 29), Duration(years=1), date(2001, 2, 28)),
@@ -199,7 +205,7 @@ DATE_CALC_TEST_CASES = (
 
 # A list of test cases of multiplications of durations
 # are compared against a given expected result.
-DATE_MUL_TEST_CASES = (
+DATE_MUL_TEST_CASES: Final[Sequence[tuple[Any, Any, Duration]]] = (
     (Duration(years=1, months=1), 3, Duration(years=3, months=3)),
     (Duration(years=1, months=1), -3, Duration(years=-3, months=-3)),
     (3, Duration(years=1, months=1), Duration(years=3, months=3)),
@@ -216,7 +222,7 @@ class DurationTest(unittest.TestCase):
     which are not covered with the test cases listed above.
     """
 
-    def test_associative(self):
+    def test_associative(self) -> None:
         """
         Adding 2 durations to a date is not associative.
         """
@@ -227,7 +233,7 @@ class DurationTest(unittest.TestCase):
         res2 = start + months1 + days1
         self.assertNotEqual(res1, res2)
 
-    def test_typeerror(self):
+    def test_typeerror(self) -> None:
         """
         Test if TypError is raised with certain parameters.
         """
@@ -265,13 +271,13 @@ class DurationTest(unittest.TestCase):
             TypeError, operator.mul, 3.14, Duration(years=1, months=1, weeks=5)
         )
 
-    def test_parseerror(self):
+    def test_parseerror(self) -> None:
         """
         Test for unparsable duration string.
         """
         self.assertRaises(ISO8601Error, parse_duration, "T10:10:10")
 
-    def test_repr(self):
+    def test_repr(self) -> None:
         """
         Test __repr__ and __str__ for Duration objects.
         """
@@ -285,7 +291,7 @@ class DurationTest(unittest.TestCase):
         dur = Duration(months=1)
         self.assertEqual("1 month, 0:00:00", str(dur))
 
-    def test_hash(self):
+    def test_hash(self) -> None:
         """
         Test __hash__ for Duration objects.
         """
@@ -302,7 +308,7 @@ class DurationTest(unittest.TestCase):
         durSet.add(dur3)
         self.assertEqual(len(durSet), 2)
 
-    def test_neg(self):
+    def test_neg(self) -> None:
         """
         Test __neg__ for Duration objects.
         """
@@ -315,7 +321,7 @@ class DurationTest(unittest.TestCase):
         #        treats a == b the same b == a
         # self.assertNotEqual(-timedelta(days=10), -Duration(days=10))
 
-    def test_format(self):
+    def test_format(self) -> None:
         """
         Test various other strftime combinations.
         """
@@ -332,7 +338,7 @@ class DurationTest(unittest.TestCase):
         self.assertEqual(duration_isoformat(dur), "P3Y7M23DT5H25M0.33S")
         self.assertEqual(duration_isoformat(-dur), "-P3Y7M23DT5H25M0.33S")
 
-    def test_equal(self):
+    def test_equal(self) -> None:
         """
         Test __eq__ and __ne__ methods.
         """
@@ -351,7 +357,7 @@ class DurationTest(unittest.TestCase):
         #        treats a != b the same b != a
         # self.assertNotEqual(timedelta(days=1), Duration(days=1))
 
-    def test_totimedelta(self):
+    def test_totimedelta(self) -> None:
         """
         Test conversion form Duration to timedelta.
         """
@@ -367,7 +373,11 @@ class DurationTest(unittest.TestCase):
         self.assertEqual(dur.totimedelta(datetime(2001, 3, 25)), timedelta(61))
 
 
-def create_parsetestcase(durationstring, expectation, format, altstr):
+def create_parsetestcase(durationstring: str,
+                         expectation: DurationOrTimedelta,
+                         format: str,
+                         altstr: str | None,
+                         ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -381,14 +391,14 @@ def create_parsetestcase(durationstring, expectation, format, altstr):
         timedelta or Duration object.
         """
 
-        def test_parse(self):
+        def test_parse(self) -> None:
             """
             Parse an ISO duration string and compare it to the expected value.
             """
             result = parse_duration(durationstring)
             self.assertEqual(result, expectation)
 
-        def test_format(self):
+        def test_format(self) -> None:
             """
             Take duration/timedelta object and create ISO string from it.
             This is the reverse test to test_parse.
@@ -405,7 +415,12 @@ def create_parsetestcase(durationstring, expectation, format, altstr):
     return unittest.TestLoader().loadTestsFromTestCase(TestParseDuration)
 
 
-def create_mathtestcase(dur1, dur2, resadd, ressub, resge):
+def create_mathtestcase(dur1_str: str,
+                        dur2_str: str,
+                        resadd_str: str,
+                        ressub_str: str,
+                        resge: bool | None,
+                        ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -413,10 +428,10 @@ def create_mathtestcase(dur1, dur2, resadd, ressub, resge):
     MATH_TEST_CASES list, so that a failed test won't stop other tests.
     """
 
-    dur1 = parse_duration(dur1)
-    dur2 = parse_duration(dur2)
-    resadd = parse_duration(resadd)
-    ressub = parse_duration(ressub)
+    dur1 = parse_duration(dur1_str)
+    dur2 = parse_duration(dur2_str)
+    resadd = parse_duration(resadd_str)
+    ressub = parse_duration(ressub_str)
 
     class TestMathDuration(unittest.TestCase):
         """
@@ -424,30 +439,30 @@ def create_mathtestcase(dur1, dur2, resadd, ressub, resge):
         operators for Duration objects.
         """
 
-        def test_add(self):
+        def test_add(self) -> None:
             """
             Test operator + (__add__, __radd__)
             """
             self.assertEqual(dur1 + dur2, resadd)
 
-        def test_sub(self):
+        def test_sub(self) -> None:
             """
             Test operator - (__sub__, __rsub__)
             """
             self.assertEqual(dur1 - dur2, ressub)
 
-        def test_ge(self):
+        def test_ge(self) -> None:
             """
             Test operator > and <
             """
 
-            def dogetest():
+            def dogetest() -> bool:
                 """Test greater than."""
-                return dur1 > dur2
+                return dur1 > dur2  # type: ignore  # may raise TypeError
 
-            def doletest():
+            def doletest() -> bool:
                 """Test less than."""
-                return dur1 < dur2
+                return dur1 < dur2  # type: ignore  # may raise TypeError
 
             if resge is None:
                 self.assertRaises(TypeError, dogetest)
@@ -459,7 +474,10 @@ def create_mathtestcase(dur1, dur2, resadd, ressub, resge):
     return unittest.TestLoader().loadTestsFromTestCase(TestMathDuration)
 
 
-def create_datetestcase(start, tdelta, duration):
+def create_datetestcase(start: date,
+                        tdelta: DurationOrTimedelta,
+                        duration: Duration,
+                        ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -473,13 +491,13 @@ def create_datetestcase(start, tdelta, duration):
         operators for Duration objects.
         """
 
-        def test_add(self):
+        def test_add(self) -> None:
             """
             Test operator +.
             """
             self.assertEqual(start + tdelta, start + duration)
 
-        def test_sub(self):
+        def test_sub(self) -> None:
             """
             Test operator -.
             """
@@ -488,7 +506,7 @@ def create_datetestcase(start, tdelta, duration):
     return unittest.TestLoader().loadTestsFromTestCase(TestDateCalc)
 
 
-def create_datecalctestcase(start, duration, expectation):
+def create_datecalctestcase(start: Any, duration: Any, expectation: Any) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -501,7 +519,7 @@ def create_datecalctestcase(start, duration, expectation):
         A test case template test addition operators for Duration objects.
         """
 
-        def test_calc(self):
+        def test_calc(self) -> None:
             """
             Test operator +.
             """
@@ -513,7 +531,10 @@ def create_datecalctestcase(start, duration, expectation):
     return unittest.TestLoader().loadTestsFromTestCase(TestDateCalc)
 
 
-def create_datemultestcase(operand1, operand2, expectation):
+def create_datemultestcase(operand1: Any,
+                           operand2: Any,
+                           expectation: Duration,
+                           ) -> TestSuite:
     """
     Create a TestCase class for a specific test.
 
@@ -526,7 +547,7 @@ def create_datemultestcase(operand1, operand2, expectation):
         A test case template test addition operators for Duration objects.
         """
 
-        def test_mul(self):
+        def test_mul(self) -> None:
             """
             Test operator *.
             """
@@ -535,27 +556,30 @@ def create_datemultestcase(operand1, operand2, expectation):
     return unittest.TestLoader().loadTestsFromTestCase(TestDateMul)
 
 
-def test_suite():
+def test_suite() -> unittest.TestSuite:
     """
     Return a test suite containing all test defined above.
     """
     suite = unittest.TestSuite()
     for durationstring, (expectation, format, altstr) in PARSE_TEST_CASES.items():
         suite.addTest(create_parsetestcase(durationstring, expectation, format, altstr))
-    for testdata in MATH_TEST_CASES:
-        suite.addTest(create_mathtestcase(*testdata))
-    for testdata in DATE_TEST_CASES:
-        suite.addTest(create_datetestcase(*testdata))
-    for testdata in DATE_CALC_TEST_CASES:
-        suite.addTest(create_datecalctestcase(*testdata))
-    for testdata in DATE_MUL_TEST_CASES:
-        suite.addTest(create_datemultestcase(*testdata))
+    for math_data in MATH_TEST_CASES:
+        suite.addTest(create_mathtestcase(*math_data))
+    for date_data in DATE_TEST_CASES:
+        suite.addTest(create_datetestcase(*date_data))
+    for date_calc_data in DATE_CALC_TEST_CASES:
+        suite.addTest(create_datecalctestcase(*date_calc_data))
+    for date_mul_data in DATE_MUL_TEST_CASES:
+        suite.addTest(create_datemultestcase(*date_mul_data))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(DurationTest))
     return suite
 
 
 # load_tests Protocol
-def load_tests(loader, tests, pattern):
+def load_tests(loader: TestLoader,
+               tests: TestSuite,
+               pattern: str | None,
+               ) -> unittest.TestSuite:
     return test_suite()
 
 
