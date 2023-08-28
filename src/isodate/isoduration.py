@@ -9,13 +9,15 @@ from __future__ import annotations
 from datetime import date, time, timedelta
 from decimal import Decimal
 import re
+from typing import Any, Final, Literal, overload
 
-from isodate.duration import Duration
+from isodate.duration import Duration, DurationOrTimedelta
 from isodate.isoerror import ISO8601Error
 from isodate.isodatetime import parse_datetime
 from isodate.isostrf import strftime, D_DEFAULT
 
-ISO8601_PERIOD_REGEX = re.compile(
+
+ISO8601_PERIOD_REGEX: Final = re.compile(
     r"^(?P<sign>[+-])?"
     r"P(?!\b)"
     r"(?P<years>[0-9]+([,.][0-9]+)?Y)?"
@@ -29,7 +31,21 @@ ISO8601_PERIOD_REGEX = re.compile(
 # regular expression to parse ISO duration strings.
 
 
-def parse_duration(datestring: str, as_timedelta_if_possible: bool=True) -> timedelta | Duration:
+@overload
+def parse_duration(datestring: str,
+                   as_timedelta_if_possible: Literal[True] = True
+                   ) -> DurationOrTimedelta: ...
+
+
+@overload
+def parse_duration(datestring: str,
+                   as_timedelta_if_possible: Literal[False]
+                   ) -> Duration: ...
+
+
+def parse_duration(datestring: str,
+                   as_timedelta_if_possible: bool = True
+                   ) -> DurationOrTimedelta:
     """
     Parses an ISO 8601 durations into datetime.timedelta or Duration objects.
 
@@ -57,6 +73,7 @@ def parse_duration(datestring: str, as_timedelta_if_possible: bool=True) -> time
       The alternative format does not support durations with years, months or
       days set to 0.
     """
+    ret: DurationOrTimedelta
     if not isinstance(datestring, str):
         raise TypeError("Expecting a string %r" % datestring)
     match = ISO8601_PERIOD_REGEX.match(datestring)
@@ -87,7 +104,7 @@ def parse_duration(datestring: str, as_timedelta_if_possible: bool=True) -> time
                 )
             return ret
         raise ISO8601Error("Unable to parse duration string %r" % datestring)
-    groups = match.groupdict()
+    groups: dict[str, Any] = match.groupdict()
     for key, val in groups.items():
         if key not in ("separator", "sign"):
             if val is None:
@@ -124,7 +141,9 @@ def parse_duration(datestring: str, as_timedelta_if_possible: bool=True) -> time
     return ret
 
 
-def duration_isoformat(tduration: timedelta | Duration | time | date, format: str=D_DEFAULT) -> str:
+def duration_isoformat(tduration: DurationOrTimedelta | time | date,
+                       format: str = D_DEFAULT,
+                       ) -> str:
     """
     Format duration strings.
 

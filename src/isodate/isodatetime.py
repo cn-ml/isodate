@@ -6,9 +6,9 @@ and time module.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 
-from isodate.duration import Duration
+from isodate.duration import DurationOrTimedelta
 from isodate.isostrf import strftime
 from isodate.isostrf import DATE_EXT_COMPLETE, TIME_EXT_COMPLETE, TZ_EXT
 from isodate.isodates import parse_date
@@ -37,7 +37,8 @@ def parse_datetime(datetimestring: str) -> datetime:
 
 
 def datetime_isoformat(
-    tdt: timedelta | Duration | time | date, format: str=DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
+        tdt: DurationOrTimedelta | time | date,
+        format: str = DATE_EXT_COMPLETE + "T" + TIME_EXT_COMPLETE + TZ_EXT
 ) -> str:
     """
     Format datetime strings.

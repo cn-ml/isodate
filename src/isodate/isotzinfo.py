@@ -6,29 +6,49 @@ It offers a function to parse the time zone offset as specified by ISO 8601.
 from __future__ import annotations
 
 import re
-from typing import overload, TYPE_CHECKING
+from typing import Final, Literal, overload
 from datetime import datetime, tzinfo
 
 from isodate.isoerror import ISO8601Error
 from isodate.tzinfo import UTC, FixedOffset, ZERO, Utc
 
-if TYPE_CHECKING:
-    from typing_extensions import Literal
 
-TZ_REGEX = (
+TZ_REGEX: Final = (
     r"(?P<tzname>(Z|(?P<tzsign>[+-])" r"(?P<tzhour>[0-9]{2})(:?(?P<tzmin>[0-9]{2}))?)?)"
 )
 
-TZ_RE = re.compile(TZ_REGEX)
+TZ_RE: Final = re.compile(TZ_REGEX)
 
 
 @overload
-def build_tzinfo(tzname: Literal[""] | None, tzsign: str="+", tzhour: float=0, tzmin: float=0) -> None: ...
+def build_tzinfo(tzname: Literal[""] | None,
+                 tzsign: str = "+",
+                 tzhour: float = 0,
+                 tzmin: float = 0,
+                 ) -> None: ...
+
+
 @overload
-def build_tzinfo(tzname: Literal["Z"], tzsign: str="+", tzhour: float=0, tzmin: float=0) -> Utc: ...
+def build_tzinfo(tzname: Literal["Z"],
+                 tzsign: str = "+",
+                 tzhour: float = 0,
+                 tzmin: float = 0,
+                 ) -> Utc: ...
+
+
 @overload
-def build_tzinfo(tzname: str, tzsign: str="+", tzhour: float=0, tzmin: float=0) -> FixedOffset | Utc | None: ...
-def build_tzinfo(tzname: str | None, tzsign: str="+", tzhour: float=0, tzmin: float=0) -> FixedOffset | Utc | None:
+def build_tzinfo(tzname: str,
+                 tzsign: str = "+",
+                 tzhour: float = 0,
+                 tzmin: float = 0,
+                 ) -> FixedOffset | Utc | None: ...
+
+
+def build_tzinfo(tzname: str | None,
+                 tzsign: str = "+",
+                 tzhour: float = 0,
+                 tzmin: float = 0,
+                 ) -> FixedOffset | Utc | None:
     """
     create a tzinfo instance according to given parameters.
 
@@ -68,7 +88,7 @@ def parse_tzinfo(tzstring: str) -> tzinfo | None:
     raise ISO8601Error("%s not a valid time zone info" % tzstring)
 
 
-def tz_isoformat(dt: datetime, format: str="%Z") -> str:
+def tz_isoformat(dt: datetime, format: str = "%Z") -> str:
     """
     return time zone offset ISO 8601 formatted.
     The various ISO formats can be chosen with the format parameter.
@@ -87,6 +107,7 @@ def tz_isoformat(dt: datetime, format: str="%Z") -> str:
     if tzinfo.utcoffset(dt) == ZERO and tzinfo.dst(dt) == ZERO:
         return "Z"
     tdelta = tzinfo.utcoffset(dt)
+    assert tdelta is not None, "tdelta not None since tzinfo is not None"
     seconds = tdelta.days * 24 * 60 * 60 + tdelta.seconds
     sign = ((seconds < 0) and "-") or "+"
     seconds = abs(seconds)

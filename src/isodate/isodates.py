@@ -10,19 +10,22 @@ from __future__ import annotations
 
 import re
 from datetime import date, time, timedelta
+from typing import Sequence
 
-from isodate.duration import Duration
+from isodate.duration import DurationOrTimedelta
 from isodate.isostrf import strftime, DATE_EXT_COMPLETE
 from isodate.isoerror import ISO8601Error
 
-DATE_REGEX_CACHE: dict[tuple[int, bool], list[re.Pattern[str]]] = {}
+DATE_REGEX_CACHE: dict[tuple[int, bool], Sequence[re.Pattern[str]]] = {}
 # A dictionary to cache pre-compiled regular expressions.
 # A set of regular expressions is identified, by number of year digits allowed
 # and whether a plus/minus sign is required or not. (This option is changeable
 # only for 4 digit years).
 
 
-def build_date_regexps(yeardigits: int=4, expanded: bool=False) -> list[re.Pattern[str]]:
+def build_date_regexps(yeardigits: int = 4,
+                       expanded: bool = False,
+                       ) -> Sequence[re.Pattern[str]]:
     """
     Compile set of regular expressions to parse ISO dates. The expressions will
     be created only if they are not already in REGEX_CACHE.
@@ -118,7 +121,12 @@ def build_date_regexps(yeardigits: int=4, expanded: bool=False) -> list[re.Patte
     return DATE_REGEX_CACHE[(yeardigits, expanded)]
 
 
-def parse_date(datestring: str, yeardigits: int=4, expanded: bool=False, defaultmonth: int=1, defaultday: int=1) -> date:
+def parse_date(datestring: str,
+               yeardigits: int = 4,
+               expanded: bool = False,
+               defaultmonth: int = 1,
+               defaultday: int = 1,
+               ) -> date:
     """
     Parse an ISO 8601 date string into a datetime.date object.
 
@@ -195,7 +203,10 @@ def parse_date(datestring: str, yeardigits: int=4, expanded: bool=False, default
     raise ISO8601Error("Unrecognised ISO 8601 date format: %r" % datestring)
 
 
-def date_isoformat(tdate: timedelta | Duration | time | date, format: str=DATE_EXT_COMPLETE, yeardigits: int=4) -> str:
+def date_isoformat(tdate: DurationOrTimedelta | time | date,
+                   format: str = DATE_EXT_COMPLETE,
+                   yeardigits: int = 4
+                   ) -> str:
     """
     Format date strings.
 
